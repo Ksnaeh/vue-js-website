@@ -3,7 +3,7 @@
   <HelloWorld msg="Welcome to Your Vue.js App"/> -->
   <div id="app">
     
-    <form @submit.prevent="createReview">
+    <form @submit.prevent="submitForm">
       <div class="form-group row">
         <input type="text" class="form-control col-3 mx-2" placeholder="Name" v-model="proglang.langname">
         <input type="text" class="form-control col-3 mx-2" placeholder="Review" v-model="proglang.review">
@@ -26,6 +26,9 @@
           <td>{{ proglang.review }}</td>
           <td>{{ proglang.rating_no }}</td>
           <td>{{ proglang.username }}</td>
+          <td>
+            <button class="btn btn-outline-danger btn-sm mx-1" @click="deleteReview(proglang)">Remove</button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -41,12 +44,7 @@ export default {
   name: 'App',
   data(){
     return {
-      proglang: {
-        'langname': '',
-        'review': '',
-        'rating_no': '',
-        'username': '',
-      },
+      proglang: {},
       proglangs: []
     }
   },
@@ -54,12 +52,26 @@ export default {
     await this.getProglangs()
   },
 
+  //vue functions to link with the html
   methods: {
+
+    //when submit button is pressed
+    submitForm(){
+      if (this.proglang.id === undefined){
+        this.createReview();
+      }
+      else{
+        this.editReview();
+      }
+    },
+
+    //retrieve function
     async getProglangs(){
       var response = await fetch('http://127.0.0.1:8000/api/review/');
       this.proglangs = await response.json();
     },
 
+    //create function
     async createReview(){
       await this.getProglangs();
 
@@ -72,8 +84,41 @@ export default {
       });
 
       await this.getProglangs();
-    }
+    },
+
+    //update function
+    async editReview(){
+      await this.getProglangs();
+
+      await fetch(`http://127.0.0.1:8000/api/review/${this.proglang.id}/`, {
+        method: 'put',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(this.proglang)
+      });
+
+      await this.getProglangs();
+      this.proglang = {}
+    },
+  
+    //delete function
+    async deleteReview(proglang){
+      await this.getProglangs();
+
+        await fetch(`http://127.0.0.1:8000/api/review/${proglang.id}/`, {
+          method: 'delete',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(this.proglang)
+        });
+
+        await this.getProglangs();
+        this.proglang = {}
+      }
   }
+
   // components: {
   //   HelloWorld
   // }
